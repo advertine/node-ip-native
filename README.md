@@ -12,15 +12,21 @@ Usage
 -----
 
 ```js
-    ip = require('ip-native')
+    var ip = require('ip-native')
 
-    ip.toBuffer(ip) -> Buffer
-    ip.toBuffer(ip, buffer) -> buffer
-    ip.toBuffer(ip, buffer, offset) -> buffer
+    ip.toBuffer('127.0.0.1') // -> <Buffer a7 00 00 01>
+    var buffer = new Buffer(4);
+    ip.toBuffer('10.11.0.1', buffer) // -> 4
+    buffer // -> <Buffer 0a 0b 00 01>
+    var buffer = new Buffer(20);
+    ip.toBuffer('2a00::1234', buffer, 4) // -> 6
+    buffer.slice(4) // -> <Buffer 2a 00 00 00 00 00 00 00 00 00 00 00 00 00 12 34>
 
     ip.toNumber(ip) -> number or string
 
-    ip.toString(ip) -> string
+    ip.toString(buffer) -> string
+    ip.toString(buffer, offset) -> string
+    ip.toString(buffer, offset, length) -> string
 
 ```
 
