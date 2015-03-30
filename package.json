@@ -1,0 +1,38 @@
+{
+  "name": "ip-native",
+  "description": "native IP address utilities for node.js",
+  "keywords": [
+    "ip",
+    "inet_pton"
+  ],
+  "version": "0.0.0",
+  "license": "MIT",
+  "author": "Rafał Michalski <royal@advertine.com>",
+  "contributors": [],
+  "homepage": "https://github.com/advertine/node-ip-native",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/advertine/node-ip-native.git"
+  },
+  "files": [
+    "src",
+    "test",
+    "index.js",
+    "binding.gyp"
+  ],
+  "scripts": {
+    "test": "tap-prettify test/test.js"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "nan": "^1.7"
+  },
+  "devDependencies": {
+    "tap": "~0.5",
+    "tap-prettify": "*",
+    "ben": "*"
+  }
+}
