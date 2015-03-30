@@ -1,6 +1,8 @@
 Native IP address utilities for node.js
 =======================================
 
+[![Build Status][BS img]][Build Status]
+
 Installation
 ------------
 
@@ -33,3 +35,6 @@ Licence
 -------
 
 MIT
+
+[Build Status]: https://travis-ci.org/advertine/node-ip-native
+[BS img]: https://travis-ci.org/advertine/node-ip-native.svg
