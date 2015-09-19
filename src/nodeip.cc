@@ -249,11 +249,11 @@ namespace NodeIp {
     info.GetReturnValue().SetNull();
   }
 
-  void Init(Handle<Object> exports)
+  NAN_MODULE_INIT(Init)
   {
-    Nan::SetMethod(exports, "toBuffer",     ToBuffer);
-    Nan::SetMethod(exports, "toString",     ToString);
-    Nan::SetMethod(exports, "toNumber",     ToNumber);
+    Nan::SetMethod(target, "toBuffer", ToBuffer);
+    Nan::SetMethod(target, "toString", ToString);
+    Nan::SetMethod(target, "toNumber", ToNumber);
   }
 
 }
