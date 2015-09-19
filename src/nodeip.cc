@@ -4,9 +4,32 @@
 namespace NodeIp {
   using v8::Handle;
   using v8::Local;
+  using v8::Value;
   using v8::Object;
-  using v8::Int32;
-  using v8::Uint32;
+  using v8::String;
+
+  bool IpCharsFromValue(Local<Value> value, char ipchars[INET6_ADDRSTRLEN])
+  {
+    Local<String> ipstring = value->ToString();
+
+    if (ipstring.IsEmpty())
+      return false;
+
+    const int ipstrlen = ipstring->Length();
+
+    if (!ipstrlen)
+      return false;
+
+    int nchars;
+    const int flags = String::NO_NULL_TERMINATION | Nan::imp::kReplaceInvalidUtf8;
+    int blen = ipstring->WriteUtf8(ipchars, static_cast<int>(INET6_ADDRSTRLEN - 1), &nchars, flags);
+    /* utf8 characters or string cut */
+    if (blen != nchars || nchars != ipstrlen)
+      return false;
+
+    ipchars[blen] = '\0';
+    return true;
+  }
 
   /**
    * Ip address to binary.
@@ -31,17 +54,21 @@ namespace NodeIp {
   **/
   NAN_METHOD(ToBuffer)
   {
-    NanScope();
 
-    if ( args.Length() < 1 )
-      return NanThrowError("ip.toBuffer: missing IP address");
+    if ( info.Length() < 1 )
+      return Nan::ThrowError("ip.toBuffer: missing IP address");
 
     ssize_t ipsize;
     const void *ipdata;
 
+    char ipchars[INET6_ADDRSTRLEN];
+
+    if (!IpCharsFromValue(info[0], ipchars))
+      return info.GetReturnValue().SetNull();
+
     ipv6data_t ip;
 
-    int iptype = IpAddressStr2No(*NanAsciiString(args[0]), &ip);
+    int iptype = IpAddressStr2No(ipchars, &ip);
 
     switch(iptype) {
       case 4:
@@ -55,21 +82,21 @@ namespace NodeIp {
         break;
 
       default:
-        NanReturnNull();
+        return info.GetReturnValue().SetNull();
     }
 
-    if ( args.Length() > 1 ) {
-      if ( ! node::Buffer::HasInstance(args[1]) ) {
-        return NanThrowError("ip.toBuffer: second argument should be a buffer");
+    if ( info.Length() > 1 ) {
+      if ( ! node::Buffer::HasInstance(info[1]) ) {
+        return Nan::ThrowError("ip.toBuffer: second argument should be a buffer");
       }
 
       ssize_t offset = 0, ipoffset = 0;
 
-      if ( args.Length() > 2 ) {
-        offset = args[2]->Int32Value();
+      if ( info.Length() > 2 ) {
+        offset = info[2]->Int32Value();
       }
 
-      Local<Object> buffer = args[1].As<Object>();
+      Local<Object> buffer = info[1].As<Object>();
       ssize_t bufsize = node::Buffer::Length(buffer);
 
       /* offset negative is from the end of buffer */
@@ -94,15 +121,16 @@ namespace NodeIp {
                 ipsize );
       }
 
-      NanReturnValue( NanNew<Int32>(iptype) );
+      info.GetReturnValue().Set( (int32_t) iptype );
 
     } else {
 
-      Local<Object> buffer = NanNewBufferHandle((uint32_t) ipsize);
-
-      memcpy( (void *)node::Buffer::Data(buffer), ipdata, ipsize );
-
-      NanReturnValue(buffer);
+      Nan::MaybeLocal<Object> buffer = Nan::CopyBuffer(
+                                      (const char *)ipdata, (uint32_t) ipsize);
+      if (buffer.IsEmpty()) {
+        info.GetReturnValue().SetNull();
+      } else
+        info.GetReturnValue().Set(buffer.ToLocalChecked());
     }
 
   }
@@ -126,29 +154,40 @@ namespace NodeIp {
   **/
   NAN_METHOD(ToNumber)
   {
-    NanScope();
 
-    if ( args.Length() < 1 )
-      return NanThrowError("ip.toNumber: missing IP address");
+    if ( info.Length() < 1 )
+      return Nan::ThrowError("ip.toNumber: missing IP address");
+
+    char ipchars[INET6_ADDRSTRLEN];
+
+    if (!IpCharsFromValue(info[0], ipchars))
+      return info.GetReturnValue().SetNull();
 
     ipv6data_t ip;
 
-    int iptype = IpAddressStr2No(*NanAsciiString(args[0]), &ip);
+    int iptype = IpAddressStr2No(ipchars, &ip);
 
     switch(iptype) {
       case 4:
         {
           uint32_t ipno = ntohl(ip.ipv4.addr.ui32);
-          NanReturnValue( NanNew<Uint32>(ipno) );
+          info.GetReturnValue().Set( Nan::New( ipno ) ); // a bug in 0.10 converts to signed int if not wrapped with New
+          break;
         }
       case 6:
         {
-          char out[IPv6_DECIMAL_SIZE];
-          NanReturnValue( NanNew(out, IpAddressV6NumStr(&ip, out)) );
+          char ipchars[IPv6_DECIMAL_SIZE];
+          int ipstrlen = IpAddressV6NumStr(&ip, ipchars);
+          Nan::MaybeLocal<String> ipstring = Nan::NewOneByteString((uint8_t *)ipchars, ipstrlen);
+          if (ipstring.IsEmpty()) {
+            info.GetReturnValue().SetNull();
+          } else
+            info.GetReturnValue().Set( ipstring.ToLocalChecked() );
+          break;
         }
 
       default:
-        NanReturnNull();
+        info.GetReturnValue().SetNull();
     }
   }
 
@@ -171,21 +210,20 @@ namespace NodeIp {
   **/
   NAN_METHOD(ToString)
   {
-    NanScope();
 
-    if ( args.Length() < 1 || ! node::Buffer::HasInstance(args[0]) )
-      return NanThrowError("ip.toString: missing buffer argument");
+    if ( info.Length() < 1 || ! node::Buffer::HasInstance(info[0]) )
+      return Nan::ThrowError("ip.toString: missing buffer argument");
 
-    if ( ! node::Buffer::HasInstance(args[0]) )
-      return NanThrowTypeError("ip.toString: first argument needs to be a buffer");
+    if ( ! node::Buffer::HasInstance(info[0]) )
+      return Nan::ThrowTypeError("ip.toString: first argument needs to be a buffer");
 
-    Local<Object> buffer = args[0].As<Object>();
+    Local<Object> buffer = info[0].As<Object>();
     ssize_t offset = 0, bufsize = node::Buffer::Length(buffer), ipsize = bufsize;
 
-    if ( args.Length() > 1 ) {
-      offset = args[1]->Int32Value();
-      if ( args.Length() > 2 ) {
-        ipsize = args[2]->Int32Value();
+    if ( info.Length() > 1 ) {
+      offset = info[1]->Int32Value();
+      if ( info.Length() > 2 ) {
+        ipsize = info[2]->Int32Value();
       } else {
         ipsize = bufsize - offset;
       }
@@ -198,20 +236,24 @@ namespace NodeIp {
     }
 
     if ( offset >= 0 && ipsize > 0 ) {
-      char out[INET6_ADDRSTRLEN];
-      char *str = IPAddressToStr((void *)(node::Buffer::Data(buffer) + offset), ipsize, out);
-      if ( str != NULL )
-        NanReturnValue( NanNew(str) );
+      char ipchars[INET6_ADDRSTRLEN];
+      char *str = IPAddressToStr((void *)(node::Buffer::Data(buffer) + offset), ipsize, ipchars);
+      if ( str != NULL ) {
+        Nan::MaybeLocal<String> ipstring = Nan::NewOneByteString((uint8_t *)str);
+        if (!ipstring.IsEmpty()) {
+          return info.GetReturnValue().Set( ipstring.ToLocalChecked() );
+        }
+      }
     }
 
-    NanReturnNull();
+    info.GetReturnValue().SetNull();
   }
 
   void Init(Handle<Object> exports)
   {
-    NODE_SET_METHOD(exports, "toBuffer",     ToBuffer);
-    NODE_SET_METHOD(exports, "toString",     ToString);
-    NODE_SET_METHOD(exports, "toNumber",     ToNumber);
+    Nan::SetMethod(exports, "toBuffer",     ToBuffer);
+    Nan::SetMethod(exports, "toString",     ToString);
+    Nan::SetMethod(exports, "toNumber",     ToNumber);
   }
 
 }

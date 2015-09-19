@@ -19,6 +19,8 @@ test("should convert ip to buffer", function(t) {
   t.deepEqual(ip.toBuffer('::'), new Buffer('00000000000000000000000000000000', 'hex'));
   t.deepEqual(ip.toBuffer('1234::abcd'), new Buffer('1234000000000000000000000000abcd', 'hex'));
   t.deepEqual(ip.toBuffer('1234:5678:9abc:def0:4321:8765:cba9:0fed'), new Buffer('123456789abcdef043218765cba90fed', 'hex'));
+  t.deepEqual(ip.toBuffer('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'), new Buffer('ffffffffffffffffffffffffffffffff', 'hex'));
+  t.deepEqual(ip.toBuffer('ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255'), new Buffer('ffffffffffffffffffffffffffffffff', 'hex'));
   t.end();
 });
 
@@ -34,6 +36,7 @@ test("should not convert ip to buffer", function(t) {
   t.strictEqual(ip.toBuffer(false), null);
   t.strictEqual(ip.toBuffer(null), null);
   t.strictEqual(ip.toBuffer(void(0)), null);
+  t.strictEqual(ip.toBuffer('ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.2555'), null);
   t.end();
 });
 
@@ -64,10 +67,12 @@ test("should convert ip to number", function(t) {
   t.strictEqual(ip.toNumber('0.0.0.0'), 0);
   t.strictEqual(ip.toNumber('127.1.2.3'), 0x7f010203);
   t.strictEqual(ip.toNumber('255.255.255.255'), 0xffffffff);
+  t.strictEqual(ip.toNumber('255.255.255.254'), 0xfffffffe);
   t.strictEqual(ip.toNumber('::ffff:8.255.254.0'), 0x08fffe00);
   t.strictEqual(ip.toNumber('::ffff:ffff:ffff'), 0xffffffff);
   t.strictEqual(ip.toNumber('::'), '0');
   t.strictEqual(ip.toNumber('::0123:abcd'), String(0x0123abcd));
+  t.strictEqual(ip.toNumber('ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255'), '340282366920938463463374607431768211455');
   t.strictEqual(ip.toNumber('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff'), '340282366920938463463374607431768211455');
   t.strictEqual(ip.toNumber('ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe'), '340282366920938463463374607431768211454');
   t.end();
