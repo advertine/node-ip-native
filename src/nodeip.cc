@@ -93,7 +93,7 @@ namespace NodeIp {
       ssize_t offset = 0, ipoffset = 0;
 
       if ( info.Length() > 2 ) {
-        offset = Nan::To<ssize_t>(info[2]).FromMaybe(0);
+        offset = Nan::To<int32_t>(info[2]).FromMaybe(0);
       }
 
       Local<Object> buffer = info[1].As<Object>();
@@ -221,9 +221,9 @@ namespace NodeIp {
     ssize_t offset = 0, bufsize = node::Buffer::Length(buffer), ipsize = bufsize;
 
     if ( info.Length() > 1 ) {
-      offset = Nan::To<ssize_t>(info[1]).FromMaybe(0);
+      offset = Nan::To<int32_t>(info[1]).FromMaybe(0);
       if ( info.Length() > 2 ) {
-        ipsize = Nan::To<ssize_t>(info[2]).FromMaybe(0);
+        ipsize = Nan::To<int32_t>(info[2]).FromMaybe(0);
       } else {
         ipsize = bufsize - offset;
       }
