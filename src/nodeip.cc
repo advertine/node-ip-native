@@ -10,9 +10,9 @@ namespace NodeIp {
 
   bool IpCharsFromValue(Local<Value> value, char ipchars[INET6_ADDRSTRLEN])
   {
-    Local<String> ipstring = value->ToString();
+    Local<String> ipstring;
 
-    if (ipstring.IsEmpty())
+    if ( ! Nan::To<String>(value).ToLocal(&ipstring) )
       return false;
 
     const int ipstrlen = ipstring->Length();
@@ -93,7 +93,7 @@ namespace NodeIp {
       ssize_t offset = 0, ipoffset = 0;
 
       if ( info.Length() > 2 ) {
-        offset = info[2]->Int32Value();
+        offset = Nan::To<ssize_t>(info[2]).FromMaybe(0);
       }
 
       Local<Object> buffer = info[1].As<Object>();
@@ -221,9 +221,9 @@ namespace NodeIp {
     ssize_t offset = 0, bufsize = node::Buffer::Length(buffer), ipsize = bufsize;
 
     if ( info.Length() > 1 ) {
-      offset = info[1]->Int32Value();
+      offset = Nan::To<ssize_t>(info[1]).FromMaybe(0);
       if ( info.Length() > 2 ) {
-        ipsize = info[2]->Int32Value();
+        ipsize = Nan::To<ssize_t>(info[2]).FromMaybe(0);
       } else {
         ipsize = bufsize - offset;
       }
