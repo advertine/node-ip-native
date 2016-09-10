@@ -74,7 +74,7 @@ static char *inet_ntop4 (const unsigned char *src, char *dst, size_t size)
 
   len = strlen(tmp);
   if(len == 0 || len >= size) {
-    SET_ERRNO(ENOSPC);
+    // SET_ERRNO(ENOSPC);
     return (NULL);
   }
   strcpy(dst, tmp);
@@ -153,7 +153,7 @@ static char *inet_ntop6 (const unsigned char *src, char *dst, size_t size)
     if(i == 6 && best.base == 0 &&
         (best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
       if(!inet_ntop4(src+12, tp, sizeof(tmp) - (tp - tmp))) {
-        SET_ERRNO(ENOSPC);
+        // SET_ERRNO(ENOSPC);
         return (NULL);
       }
       tp += strlen(tp);
@@ -171,7 +171,7 @@ static char *inet_ntop6 (const unsigned char *src, char *dst, size_t size)
   /* Check for overflow, copy, and we're done.
    */
   if((size_t)(tp - tmp) > size) {
-    SET_ERRNO(ENOSPC);
+    // SET_ERRNO(ENOSPC);
     return (NULL);
   }
   strcpy(dst, tmp);
@@ -201,7 +201,7 @@ char *Curl_inet_ntop(int af, const void *src, char *buf, size_t size)
     return inet_ntop6((const unsigned char*)src, buf, size);
 #endif
   default:
-    SET_ERRNO(EAFNOSUPPORT);
+    // SET_ERRNO(EAFNOSUPPORT);
     return NULL;
   }
 }

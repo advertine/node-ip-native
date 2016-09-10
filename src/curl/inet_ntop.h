@@ -23,15 +23,15 @@
  ***************************************************************************/
 
 #define ENABLE_IPV6
-#ifndef ENOSPC
-#  define ENOSPC
-#endif
-#ifndef SET_ERRNO
-#  define SET_ERRNO(err)
-#endif
-#ifndef EAFNOSUPPORT
-#  define EAFNOSUPPORT
-#endif
+// #ifndef ENOSPC
+// #  define ENOSPC
+// #endif
+// #ifndef SET_ERRNO
+// #  define SET_ERRNO(err)
+// #endif
+// #ifndef EAFNOSUPPORT
+// #  define EAFNOSUPPORT
+// #endif
 #ifndef DEBUGASSERT
 #  define DEBUGASSERT(expr)
 #endif
